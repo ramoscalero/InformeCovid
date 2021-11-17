@@ -1,0 +1,60 @@
+---
+title: "Informe COVID-19 en Andalucía"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(dplyr)
+library(tidyr)
+library(knitr)
+
+url.covid <- "https://www.juntadeandalucia.es/institutodeestadisticaycartografia/badea/stpivot/stpivot/Print?cube=73b55124-f999-499d-bde6-c37e4f1deb3d&type=3&foto=si&ejecutaDesde=&codConsulta=44088&consTipoVisua=JP"
+data <- read.csv(url.covid, header = TRUE, sep = ";", fileEncoding = "UTF-8", dec = ",")
+
+data <- data %>% 
+ select(Lugar.de.residencia, Medida, Valor) %>% 
+ filter(!is.na(Valor) ) %>% 
+pivot_wider(names_from = Medida, values_from = Valor)
+
+
+ia.14.and <- data$`Tasa PDIA 14 días`[data$Lugar.de.residencia == 'Andalucía']
+ia.14.sev <- data$`Tasa PDIA 14 días`[data$Lugar.de.residencia == 'Sevilla']
+
+```
+
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Andalucía: Incidencia Acumulada a 14 días
+
+```{r fig.height=10}
+gauge(round(ia.14.and, digits = 0), min = 0, max = 250, symbol = '', gaugeSectors(
+  success = c(0, 50), warning = c(50, 100), danger = c(100, 250)
+))
+```
+
+### Sevilla: Incidencia Acumulada a 14 días 
+
+```{r fig.height=10}
+gauge(round(ia.14.sev, digits = 0), min = 0, max = 250, symbol = '', gaugeSectors(
+  success = c(0, 50), warning = c(50, 100), danger = c(100, 250)
+))
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Número acumulado y tasas de casos confirmados, curados y fallecidos por provincia
+
+```{r echo=FALSE}
+
+ kable(data)
+
+
+```
+Fuente de información: https://www.juntadeandalucia.es/institutodeestadisticaycartografia
